@@ -62,7 +62,7 @@ class RecurrentConvLayer(object):
 		'''
 
 		assert shape[1]==filters[1]
-		assert filters[0]=rfilter[0]
+		assert filters[0]==rfilter[0]
 		self.input=input
 		layer_size=(shape[0],filters[0],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
 		
