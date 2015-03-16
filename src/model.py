@@ -11,7 +11,7 @@ from recurrentConvLayer import *
 
 class model(object):
 
-		def __init__(self,learn_rate,n_epochs,filters,times,batch_size):
+	def __init__(self,learn_rate,n_epochs,filters,times,batch_size):
 		'''
 		>>>type learn_rate: float
 		>>>para learn_rate: learning rate

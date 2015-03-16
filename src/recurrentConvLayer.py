@@ -112,7 +112,7 @@ class RecurrentConvLayer(object):
 							state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
 			return state
 
-		state,_=theano.scan(step,sequences=conv_input,output_info=self.b_r,n_step=time)
+		state,_=theano.scan(step,sequences=conv_input,outputs_info=self.b_r,n_steps=time)
 
 		pool_out=downsample.max_pool_2d(
 			input=state,
