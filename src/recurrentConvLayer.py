@@ -64,7 +64,8 @@ class RecurrentConvLayer(object):
 		assert shape[1]==filters[1]
 		assert filters[0]=rfilter[0]
 		self.input=input
-
+		layer_size=(shape[0],filters[0],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
+		
 		inflow=np.prod(filters[1:])
 		outflow=filters[0]*np.prod(filters[2:])/np.prod(pool)
 
@@ -78,7 +79,7 @@ class RecurrentConvLayer(object):
 
 		b_init=np.zeros(shape=filters[0],dtype=theano.config.floatX)
 		self.b=theano.shared(value=b_init,name='b_in')
-		b_r_init=np.zeros(shape=rfilter[0],dtype=theano.config.floatX)
+		b_r_init=np.zeros(shape=layer_size,dtype=theano.config.floatX)
 		self.b_r=theano.shared(value=b_r_init,name='b_r')
 
 		conv_input=conv.conv2d(
@@ -89,7 +90,6 @@ class RecurrentConvLayer(object):
 			)
 
 		def step(x_input,state):
-			layer_size=(shape[0],filters[0],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
 			tmp_value=T.zeros(state.shape)
 			for i in xrange(layer_size[0]):
 				for j in xrange(layer_size[1]):
@@ -110,4 +110,15 @@ class RecurrentConvLayer(object):
 									norm+=tmp_value[i,k-N/2+n,x,y]**2
 							norm=(norm*alpha/N+1)**beta
 							state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
+			return state
 
+		state,_=theano.scan(step,sequences=conv_input,output_info=self.b_r,n_step=time)
+
+		pool_out=downsample.max_pool_2d(
+			input=state,
+			ds=pool,
+			ignore_border=True
+		)
+		self.output=pool_out+self.b.dimshuffle('x',0,'x','x')
+		self.param=[self.w_in,self.w_r,self.b,self.b_r]
+		
