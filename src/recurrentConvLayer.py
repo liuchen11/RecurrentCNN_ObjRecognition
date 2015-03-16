@@ -4,6 +4,9 @@ import theano
 import theano.tensor as T
 from theano.tensor.nnet import conv
 
+def ReLU(x):
+	return theano.tensor.switch(x<0,0,x)
+
 def Padding(input,width,height):
 	'''
 	>>>type input: T.matrix
@@ -31,7 +34,7 @@ def Padding(input,width,height):
 
 class RecurrentConvLayer(object):
 	
-	def __init__(self,rng,input,shape,filters,rfilter,alpha,beta,time,pool):
+	def __init__(self,rng,input,shape,filters,rfilter,alpha,beta,N,time,pool):
 		'''
 		>>>type rng: numpy.random.RandomState
 		>>>para rng: random seed
@@ -48,8 +51,8 @@ class RecurrentConvLayer(object):
 		>>>type rfilter: tuple or list of length 3
 		>>>para rfilter: (num of filters, recurrent filter height, recurrent filter width)
 
-		>>>type alpha,beta: int or float
-		>>>para alpha,beta: used in the formulation of recurent state
+		>>>type alpha,beta,N: int or float
+		>>>para alpha,beta,N: used in the formulation of recurent state
 
 		>>>type time: int
 		>>>para time: the num of iteration in the recurrent layer
@@ -86,16 +89,25 @@ class RecurrentConvLayer(object):
 			)
 
 		def step(x_input,state):
-			layer_size=(shape[0],shape[1],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
+			layer_size=(shape[0],filters[0],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
 			tmp_value=T.zeros(state.shape)
 			for i in xrange(layer_size[0]):
 				for j in xrange(layer_size[1]):
-					padded_input=Padding(input=input[i,j],height=rfilter[1],width=rfilter[2])
+					padded_input=Padding(input=state[i,j],height=rfilter[1],width=rfilter[2])
 					conv_recurrent=conv.conv2d(
 						input=padded_input.dimshuffle('x','x',0,1),
 						filters=self.w_r[j].dimshuffle('x','x',0,1),		#warning non-shared variable!
 						filter_shape=[1,1,rfilter[1],rfilter[2]],
 						image_shape=[1,1,layer_size[2],layer_size[3]]
 					)
-					tmp_value=T.set_subtensor(tmp_value[i,j],conv_recurrent[0,0])
-			
+					tmp_value=T.set_subtensor(tmp_value[i,j],ReLU(conv_recurrent[0,0]+x_input[i,j]))
+				for x in xrange(layer_size[2]):
+					for y in xrange(layer_size[3]):
+						for k in xrange(layer_size[1]):
+							norm=0.0
+							for n in xrange(N):
+								if k-N/2+n>=0 and k-N/2+n<layer_size[1]:
+									norm+=tmp_value[i,k-N/2+n,x,y]**2
+							norm=(norm*alpha/N+1)**beta
+							state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
+
