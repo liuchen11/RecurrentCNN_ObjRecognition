@@ -61,58 +61,60 @@ class model(object):
 			pool=[1,1]
 		)
 
-		self.layer2=RecurrentConvLayer(
-			rng=rng,
-			input=self.layer1.output,
-			shape=[batch_size,filters[1],12,12],
-			filters=[filters[2],filters[1],3,3],
-			rfilter=[filters[2],3,3],
-			alpha=0.001,beta=0.75,
-			N=filters[2]/8+1,
-			time=times[2],
-			pool=[2,2]
-		)
+		#self.layer2=RecurrentConvLayer(
+		#	rng=rng,
+		#	input=self.layer1.output,
+		#	shape=[batch_size,filters[1],12,12],
+		#	filters=[filters[2],filters[1],3,3],
+		#	rfilter=[filters[2],3,3],
+		#	alpha=0.001,beta=0.75,
+		#	N=filters[2]/8+1,
+		#	time=times[2],
+		#	pool=[2,2]
+		#)
 
-		self.layer3=RecurrentConvLayer(
-			rng=rng,
-			input=self.layer2.output,
-			shape=[batch_size,filters[2],5,5],
-			filters=[filters[3],filters[2],3,3],
-			rfilter=[filters[3],3,3],
-			alpha=0.001,beta=0.75,
-			N=filters[3]/8+1,
-			time=times[3],
-			pool=[1,1]
-		)
+		#self.layer3=RecurrentConvLayer(
+		#	rng=rng,
+		#	input=self.layer2.output,
+		#	shape=[batch_size,filters[2],5,5],
+		#	filters=[filters[3],filters[2],3,3],
+		#	rfilter=[filters[3],3,3],
+		#	alpha=0.001,beta=0.75,
+		#	N=filters[3]/8+1,
+		#	time=times[3],
+		#	pool=[1,1]
+		#)
 
-		self.layer4=RecurrentConvLayer(
-			rng=rng,
-			input=self.layer3.output,
-			shape=[batch_size,filters[3],3,3],
-			filters=[filters[4],filters[3],3,3],
-			rfilter=[filters[4],3,3],
-			alpha=0.001,beta=0.75,
-			N=filters[4]/8+1,
-			time=times[4],
-			pool=[1,1]
-		)
+		#self.layer4=RecurrentConvLayer(
+		#	rng=rng,
+		#	input=self.layer3.output,
+		#	shape=[batch_size,filters[3],3,3],
+		#	filters=[filters[4],filters[3],3,3],
+		#	rfilter=[filters[4],3,3],
+		#	alpha=0.001,beta=0.75,
+		#	N=filters[4]/8+1,
+		#	time=times[4],
+		#	pool=[1,1]
+		#)
 
 		self.layer5=LogisticRegression(
-			rng=rng,
-			input=self.layer4.output.flatten(2),
-			n_in=filters[4]*1*1,
+			input=self.layer1.output.flatten(2),
+			n_in=filters[1]*3*3,
 			n_out=10
 		)
 
-		self.cost=layer5.negative_log_likelyhood(self.y),
-		self.error=layer5.errors(self.y)
+		self.cost=self.layer5.negative_log_likelyhood(self.y)
+		self.error=self.layer5.errors(self.y)
 
-		self.params=self.layer0.param+self.layer1.param+self.layer2.param+layer3.param+layer4.param+layer5.param
-		self.grad=T.grad(self.cost,self.params)
+		print type(self.layer1.output.flatten(2))
+		print type(self.cost)
+
+		self.params=self.layer0.param+self.layer1.param+self.layer5.param
+		self.grads=T.grad(self.cost,self.params)
 
 		self.update=[
 			(param_i,param_i-self.lr*grad_i)
-			for param_i,grad_i in zip(self.params,self.grad)
+			for param_i,grad_i in zip(self.params,self.grads)
 		]
 		print 'construction completed!'
 

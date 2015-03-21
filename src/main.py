@@ -23,6 +23,8 @@ if __name__=='__main__':
 	test_data=np.asarray(test['data'],dtype=theano.config.floatX)
 	test_label=np.asarray(test['labels'],dtype=theano.config.floatX)
 
+	print 'data loaded!'
+
 	machine=model(
 		learn_rate=0.005,
 		n_epochs=100,
@@ -31,6 +33,8 @@ if __name__=='__main__':
 		batch_size=25
 		)
 
+	print 'pre-process the data...'
+	
 	train_set_data=np.asarray(train_data,dtype=theano.config.floatX)
 	train_set_label=np.asarray(train_label,dtype=int)
 	validate_set_data=np.asarray(validate_data,dtype=theano.config.floatX)
@@ -46,6 +50,8 @@ if __name__=='__main__':
 
 	for i in xrange(len(test_set_data)):
 		test_set_data[i]-=test_set_data[i].mean()
+
+	print 'start training the model...'
 
 	machine.train_validate_test(
 		train_set_data,train_set_label,

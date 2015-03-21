@@ -14,25 +14,22 @@ class LogisticRegression(object):
 		>>>type n_in: int
 		>>>para n_in: num of input neurons
 
-		>>>type n_out: list or tuple of length 2
-		>>>para n_out: num of output neurons [batch_size, classes]
+		>>>type n_out: int
+		>>>para n_out: num of output neurons
 		'''
-		out=np.prod(n_out)
-
 		self.w=theano.shared(
-			value=np.zeros((n_in,out),dtype=theano.config.floatX),
+			value=np.zeros((n_in,n_out),dtype=theano.config.floatX),
 			name='w',
 			borrow=True
 			)
 		self.b=theano.shared(
-			value=np.zeros((out,),dtype=theano.config.floatX),
+			value=np.zeros((n_out,),dtype=theano.config.floatX),
 			name='b',
 			borrow=True
 			)
 		self.param=[self.w,self.b]
 
-		self.output=(T.dot(input,self.w)+self.b).reshape(n_out)
-		self.output=softmax(self.output)
+		self.output=softmax(T.dot(input,self.w)+self.b)
 		self.predict=T.argmax(self.output,axis=1)
 
 	def negative_log_likelyhood(self,y):
