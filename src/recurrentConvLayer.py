@@ -3,6 +3,7 @@ import numpy as np
 import theano
 import theano.tensor as T
 from theano.tensor.nnet import conv
+from theano.tensor.signal import downsample
 
 def ReLU(x):
 	return theano.tensor.switch(x<0,0,x)
@@ -89,6 +90,8 @@ class RecurrentConvLayer(object):
 			image_shape=shape
 			)
 
+		print 'initialize the weight'
+
 		def step(x_input,state):
 			tmp_value=T.zeros(state.shape)
 			for i in xrange(layer_size[0]):
@@ -104,21 +107,25 @@ class RecurrentConvLayer(object):
 				for x in xrange(layer_size[2]):
 					for y in xrange(layer_size[3]):
 						for k in xrange(layer_size[1]):
-							norm=0.0
-							for n in xrange(N):
-								if k-N/2+n>=0 and k-N/2+n<layer_size[1]:
-									norm+=tmp_value[i,k-N/2+n,x,y]**2
-							norm=(norm*alpha/N+1)**beta
+							norm=1
+							#norm=0.0
+							#for n in xrange(N):
+							#	if k-N/2+n>=0 and k-N/2+n<layer_size[1]:
+							#		norm+=tmp_value[i,k-N/2+n,x,y]**2
+							#norm=(norm*alpha/N+1)**beta
 							state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
 			return state
+
+		print 'begin scan'
 
 		state,_=theano.scan(step,sequences=conv_input,outputs_info=self.b_r,n_steps=time)
 
 		pool_out=downsample.max_pool_2d(
-			input=state,
+			input=state[-1],
 			ds=pool,
 			ignore_border=True
 		)
 		self.output=pool_out+self.b.dimshuffle('x',0,'x','x')
 		self.param=[self.w_in,self.w_r,self.b,self.b_r]
 		
+		print 'recurrentconvlayer constructed!'
