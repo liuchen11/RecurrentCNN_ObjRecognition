@@ -1,6 +1,0 @@
-data loaded!
-initialize the weight
-begin scan
-recurrentconvlayer constructed!
-<class 'theano.tensor.var.TensorVariable'>
-<class 'theano.tensor.var.TensorVariable'>
