@@ -61,29 +61,29 @@ class model(object):
 			pool=[1,1]
 		)
 
-		#self.layer2=RecurrentConvLayer(
-		#	rng=rng,
-		#	input=self.layer1.output,
-		#	shape=[batch_size,filters[1],12,12],
-		#	filters=[filters[2],filters[1],3,3],
-		#	rfilter=[filters[2],3,3],
-		#	alpha=0.001,beta=0.75,
-		#	N=filters[2]/8+1,
-		#	time=times[2],
-		#	pool=[2,2]
-		#)
+		self.layer2=RecurrentConvLayer(
+			rng=rng,
+			input=self.layer1.output,
+			shape=[batch_size,filters[1],12,12],
+			filters=[filters[2],filters[1],3,3],
+			rfilter=[filters[2],3,3],
+			alpha=0.001,beta=0.75,
+			N=filters[2]/8+1,
+			time=times[2],
+			pool=[2,2]
+		)
 
-		#self.layer3=RecurrentConvLayer(
-		#	rng=rng,
-		#	input=self.layer2.output,
-		#	shape=[batch_size,filters[2],5,5],
-		#	filters=[filters[3],filters[2],3,3],
-		#	rfilter=[filters[3],3,3],
-		#	alpha=0.001,beta=0.75,
-		#	N=filters[3]/8+1,
-		#	time=times[3],
-		#	pool=[1,1]
-		#)
+		self.layer3=RecurrentConvLayer(
+			rng=rng,
+			input=self.layer2.output,
+			shape=[batch_size,filters[2],5,5],
+			filters=[filters[3],filters[2],3,3],
+			rfilter=[filters[3],3,3],
+			alpha=0.001,beta=0.75,
+			N=filters[3]/8+1,
+			time=times[3],
+			pool=[1,1]
+		)
 
 		#self.layer4=RecurrentConvLayer(
 		#	rng=rng,
@@ -98,15 +98,16 @@ class model(object):
 		#)
 
 		self.layer5=LogisticRegression(
-			input=self.layer1.output.flatten(2),
-			n_in=filters[1]*3*3,
+			input=self.layer2.output.flatten(2),
+			n_in=filters[1]*5*5,
 			n_out=10
 		)
 
 		self.cost=self.layer5.negative_log_likelyhood(self.y)
 		self.error=self.layer5.errors(self.y)
 
-		self.params=self.layer0.param+self.layer1.param+self.layer5.param
+		self.params=self.layer0.param+self.layer1.param+self.layer2.param+self.layer5.param
+		#self.params=self.layer0.param+self.layer1.param+self.layer2.param+self.layer3.param+self.layer5.param
 		self.grads=T.grad(self.cost,self.params)
 
 		self.updates=[

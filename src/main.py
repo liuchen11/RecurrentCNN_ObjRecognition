@@ -29,7 +29,7 @@ if __name__=='__main__':
 		learn_rate=0.005,
 		n_epochs=100,
 		filters=[96,96,96,96,96],
-		times=[0,1,1,1,1],
+		times=[0,3,3,3,3],
 		batch_size=25
 		)
 
