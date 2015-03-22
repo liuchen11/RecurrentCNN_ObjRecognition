@@ -120,6 +120,22 @@ class RecurrentConvLayer(object):
 
 		print 'initialize the weight'
 
+		def iteration(x_input,state):
+			state=state.dimshuffle(1,0,2,3)
+			x_input=x_input.dimshuffle(1,0,2,3)
+			for i in xrange(layer_size[1]):
+				padded_input=TensorPadding(TensorPadding(input=state[i],width=rfilter[1]-1,axis=1),width=rfilter[2]-1,axis=2)
+				conv_recurrent=conv.conv2d(
+					input=padded_input.dimshuffle('x',0,1,2),
+					filters=self.w_r[i].dimshuffle('x','x',0,1),
+					filter_shape=[1,1,rfilter[1],rfilter[2]],
+					image_shape=[layer_size[0],1,layer_size[2],layer_size[3]]
+				)
+				state=T.set_subtensor(state[i],ReLU(conv_recurrent[0]+x_input[i]))
+			state=state.dimshuffle(1,0,2,3)
+			x_input=x_input.dimshuffle(1,0,2,3)
+			return state
+
 		def step(x_input,state):
 			tmp_value=T.zeros(state.shape)
 			for i in xrange(layer_size[0]):
@@ -146,7 +162,7 @@ class RecurrentConvLayer(object):
 
 		print 'begin scan'
 
-		state,_=theano.scan(step,sequences=conv_input,outputs_info=self.b_r,n_steps=time)
+		state,_=theano.scan(iteration,non_sequences=conv_input,outputs_info=self.b_r,n_steps=time)
 
 		pool_out=downsample.max_pool_2d(
 			input=state[-1],
