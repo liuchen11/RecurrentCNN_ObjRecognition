@@ -126,39 +126,40 @@ class RecurrentConvLayer(object):
 			for i in xrange(layer_size[1]):
 				padded_input=TensorPadding(TensorPadding(input=state[i],width=rfilter[1]-1,axis=1),width=rfilter[2]-1,axis=2)
 				conv_recurrent=conv.conv2d(
-					input=padded_input.dimshuffle('x',0,1,2),
+					input=padded_input.dimshuffle(0,'x',1,2),
 					filters=self.w_r[i].dimshuffle('x','x',0,1),
 					filter_shape=[1,1,rfilter[1],rfilter[2]],
-					image_shape=[layer_size[0],1,layer_size[2],layer_size[3]]
+					image_shape=[layer_size[0],1,layer_size[2]+rfilter[1]-1,layer_size[3]+rfilter[2]-1]
 				)
+				conv_recurrent=conv_recurrent.dimshuffle(1,0,2,3)
 				state=T.set_subtensor(state[i],ReLU(conv_recurrent[0]+x_input[i]))
 			state=state.dimshuffle(1,0,2,3)
 			x_input=x_input.dimshuffle(1,0,2,3)
 			return state
 
-		def step(x_input,state):
-			tmp_value=T.zeros(state.shape)
-			for i in xrange(layer_size[0]):
-				for j in xrange(layer_size[1]):
-					padded_input=Padding(input=state[i,j],height=rfilter[1],width=rfilter[2])
-					conv_recurrent=conv.conv2d(
-						input=padded_input.dimshuffle('x','x',0,1),
-						filters=self.w_r[j].dimshuffle('x','x',0,1),		#warning non-shared variable!
-						filter_shape=[1,1,rfilter[1],rfilter[2]],
-						image_shape=[1,1,layer_size[2],layer_size[3]]
-					)
-					tmp_value=T.set_subtensor(tmp_value[i,j],ReLU(conv_recurrent[0,0]+x_input[i,j]))
-				for x in xrange(layer_size[2]):
-					for y in xrange(layer_size[3]):
-						for k in xrange(layer_size[1]):
-							norm=1
+		#def step(x_input,state):
+		#	tmp_value=T.zeros(state.shape)
+		#	for i in xrange(layer_size[0]):
+		#		for j in xrange(layer_size[1]):
+		#			padded_input=Padding(input=state[i,j],height=rfilter[1],width=rfilter[2])
+		#			conv_recurrent=conv.conv2d(
+		#				input=padded_input.dimshuffle('x','x',0,1),
+		#				filters=self.w_r[j].dimshuffle('x','x',0,1),		#warning non-shared variable!
+		#				filter_shape=[1,1,rfilter[1],rfilter[2]],
+		#				image_shape=[1,1,layer_size[2],layer_size[3]]
+		#			)
+		#			tmp_value=T.set_subtensor(tmp_value[i,j],ReLU(conv_recurrent[0,0]+x_input[i,j]))
+		#		for x in xrange(layer_size[2]):
+		#			for y in xrange(layer_size[3]):
+		#				for k in xrange(layer_size[1]):
+		#					norm=1
 							#norm=0.0
 							#for n in xrange(N):
 							#	if k-N/2+n>=0 and k-N/2+n<layer_size[1]:
 							#		norm+=tmp_value[i,k-N/2+n,x,y]**2
 							#norm=(norm*alpha/N+1)**beta
-							state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
-			return state
+		#					state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
+		#	return state
 
 		print 'begin scan'
 
