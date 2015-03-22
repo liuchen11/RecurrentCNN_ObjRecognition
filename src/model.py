@@ -106,13 +106,10 @@ class model(object):
 		self.cost=self.layer5.negative_log_likelyhood(self.y)
 		self.error=self.layer5.errors(self.y)
 
-		print type(self.layer1.output.flatten(2))
-		print type(self.cost)
-
 		self.params=self.layer0.param+self.layer1.param+self.layer5.param
 		self.grads=T.grad(self.cost,self.params)
 
-		self.update=[
+		self.updates=[
 			(param_i,param_i-self.lr*grad_i)
 			for param_i,grad_i in zip(self.params,self.grads)
 		]
@@ -204,8 +201,8 @@ class model(object):
 			for batch_index in xrange(train_set_batches):
 				iter_num=(epoch-1)*train_set_batches+batch_index
 				#print self.layer0.w.get_value()[0,0,0,0]
-				if iter_num%100==0:
-					print 'training@iter=%d/%d'%(iter_num,train_set_batches*self.n_epochs)
+				#if iter_num%100==0:
+				print 'training@iter=%d/%d'%(iter_num,train_set_batches*self.n_epochs)
 				
 				cost_now=train_model(batch_index,rate)
 
