@@ -8,6 +8,34 @@ from theano.tensor.signal import downsample
 def ReLU(x):
 	return theano.tensor.switch(x<0,0,x)
 
+def TensorPadding(input,axis,width):
+	'''
+	>>>type input: T.tensorVariable
+	>>>para input: input TensorVariable
+
+	>>>type axis: int
+	>>>para axis: which dimension to be padded
+
+	>>>type width: int
+	>>>para width: padding width
+	'''
+	shape=[]
+	for i in xrange(input.ndim):
+		shape.append(input.shape[i])
+	pad_left=(width+1)/2
+	pad_right=width/2
+
+	left_shape=shape
+	left_shape[axis]=pad_left
+	left=T.zeros(left_shape)
+	input=T.concatenate([left,input],axis=axis)
+
+	right_shape=shape
+	right_shape[axis]=pad_right
+	right=T.zeros(right_shape)
+	input=T.concatenate([input,right],axis=axis)
+	return input
+
 def Padding(input,width,height):
 	'''
 	>>>type input: T.matrix
