@@ -77,8 +77,8 @@ class RecurrentConvLayer(object):
 		>>>type filters: tuple or list of length 4
 		>>>para filters: (num of filters, num of input feature maps, filter height, filter width)
 
-		>>>type rfilter: tuple or list of length 3
-		>>>para rfilter: (num of filters, recurrent filter height, recurrent filter width)
+		>>>type rfilter: tuple or list of length 4
+		>>>para rfilter: (num of filters, num of filters, recurrent filter height, recurrent filter width)
 
 		>>>type alpha,beta,N: int or float
 		>>>para alpha,beta,N: used in the formulation of recurent state
@@ -92,6 +92,7 @@ class RecurrentConvLayer(object):
 
 		assert shape[1]==filters[1]
 		assert filters[0]==rfilter[0]
+		assert rfilter[0]==rfilter[1]
 		self.input=input
 		layer_size=(shape[0],filters[0],shape[2]-filters[2]+1,shape[3]-filters[3]+1)
 		
@@ -120,22 +121,34 @@ class RecurrentConvLayer(object):
 
 		print 'initialize the weight'
 
-		def iteration(x_input,state):
-			state=state.dimshuffle(1,0,2,3)
-			x_input=x_input.dimshuffle(1,0,2,3)
-			for i in xrange(layer_size[1]):
-				padded_input=TensorPadding(TensorPadding(input=state[i],width=rfilter[1]-1,axis=1),width=rfilter[2]-1,axis=2)
-				conv_recurrent=conv.conv2d(
-					input=padded_input.dimshuffle(0,'x',1,2),
-					filters=self.w_r[i].dimshuffle('x','x',0,1),
-					filter_shape=[1,1,rfilter[1],rfilter[2]],
-					image_shape=[layer_size[0],1,layer_size[2]+rfilter[1]-1,layer_size[3]+rfilter[2]-1]
-				)
-				conv_recurrent=conv_recurrent.dimshuffle(1,0,2,3)
-				state=T.set_subtensor(state[i],ReLU(conv_recurrent[0]+x_input[i]))
-			state=state.dimshuffle(1,0,2,3)
-			x_input=x_input.dimshuffle(1,0,2,3)
-			return state
+		state=conv_input+self.b_r
+		for i in xrange(time):
+			padded_input=TensorPadding(TensorPadding(input=state,width=rfilter[2]-1,axis=2),width=rfilter[3]-1,axis=3)
+			conv_recurrent=conv.conv2d(
+				input=padded_input,
+				filters=self.w_r,
+				filter_shape=rfilter,
+				image_shape=[layer_size[0],layer_size[1],layer_size[2]+rfilter[2]-1,layer_size[3]+rfilter[3]-1]
+			)
+			state=conv_input+conv_recurrent
+			
+
+		#def iteration(x_input,state):
+		#	state=state.dimshuffle(1,0,2,3)
+		#	x_input=x_input.dimshuffle(1,0,2,3)
+		#	for i in xrange(layer_size[1]):
+		#		padded_input=TensorPadding(TensorPadding(input=state[i],width=rfilter[1]-1,axis=1),width=rfilter[2]-1,axis=2)
+		#		conv_recurrent=conv.conv2d(
+		#			input=padded_input.dimshuffle(0,'x',1,2),
+		#			filters=self.w_r[i].dimshuffle('x','x',0,1),
+		#			filter_shape=[1,1,rfilter[1],rfilter[2]],
+		#			image_shape=[layer_size[0],1,layer_size[2]+rfilter[1]-1,layer_size[3]+rfilter[2]-1]
+		#		)
+		#		conv_recurrent=conv_recurrent.dimshuffle(1,0,2,3)
+		#		state=T.set_subtensor(state[i],ReLU(conv_recurrent[0]+x_input[i]))
+		#	state=state.dimshuffle(1,0,2,3)
+		#	x_input=x_input.dimshuffle(1,0,2,3)
+		#	return state
 
 		#def step(x_input,state):
 		#	tmp_value=T.zeros(state.shape)
@@ -161,12 +174,12 @@ class RecurrentConvLayer(object):
 		#					state=T.set_subtensor(state[i,k,x,y],tmp_value[i,k,x,y]/norm)
 		#	return state
 
-		print 'begin scan'
+		#print 'begin scan'
 
-		state,_=theano.scan(iteration,non_sequences=conv_input,outputs_info=self.b_r,n_steps=time)
+		#state,_=theano.scan(iteration,non_sequences=conv_input,outputs_info=self.b_r,n_steps=time)
 
 		pool_out=downsample.max_pool_2d(
-			input=state[-1],
+			input=state,
 			ds=pool,
 			ignore_border=True
 		)

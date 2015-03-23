@@ -54,7 +54,7 @@ class model(object):
 			input=self.layer0.output,
 			shape=[batch_size,filters[0],14,14],
 			filters=[filters[1],filters[0],3,3],
-			rfilter=[filters[1],3,3],
+			rfilter=[filters[1],filters[1],3,3],
 			alpha=0.001,beta=0.75,
 			N=filters[1]/8+1,
 			time=times[1],
@@ -66,7 +66,7 @@ class model(object):
 			input=self.layer1.output,
 			shape=[batch_size,filters[1],12,12],
 			filters=[filters[2],filters[1],3,3],
-			rfilter=[filters[2],3,3],
+			rfilter=[filters[2],filters[2],3,3],
 			alpha=0.001,beta=0.75,
 			N=filters[2]/8+1,
 			time=times[2],
@@ -78,7 +78,7 @@ class model(object):
 			input=self.layer2.output,
 			shape=[batch_size,filters[2],5,5],
 			filters=[filters[3],filters[2],3,3],
-			rfilter=[filters[3],3,3],
+			rfilter=[filters[3],filters[2],3,3],
 			alpha=0.001,beta=0.75,
 			N=filters[3]/8+1,
 			time=times[3],
@@ -98,15 +98,15 @@ class model(object):
 		#)
 
 		self.layer5=LogisticRegression(
-			input=self.layer2.output.flatten(2),
-			n_in=filters[1]*5*5,
+			input=self.layer3.output.flatten(2),
+			n_in=filters[1]*3*3,
 			n_out=10
 		)
 
 		self.cost=self.layer5.negative_log_likelyhood(self.y)
 		self.error=self.layer5.errors(self.y)
 
-		self.params=self.layer0.param+self.layer1.param+self.layer2.param+self.layer5.param
+		self.params=self.layer0.param+self.layer1.param+self.layer2.param+self.layer3.param+self.layer5.param
 		#self.params=self.layer0.param+self.layer1.param+self.layer2.param+self.layer3.param+self.layer5.param
 		self.grads=T.grad(self.cost,self.params)
 
@@ -202,8 +202,8 @@ class model(object):
 			for batch_index in xrange(train_set_batches):
 				iter_num=(epoch-1)*train_set_batches+batch_index
 				#print self.layer0.w.get_value()[0,0,0,0]
-				#if iter_num%100==0:
-				print 'training@iter=%d/%d'%(iter_num,train_set_batches*self.n_epochs)
+				if iter_num%100==0:
+					print 'training@iter=%d/%d'%(iter_num,train_set_batches*self.n_epochs)
 				
 				cost_now=train_model(batch_index,rate)
 
