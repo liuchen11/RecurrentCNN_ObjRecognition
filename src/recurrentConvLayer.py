@@ -25,13 +25,13 @@ def TensorPadding(input,axis,width):
 	pad_left=(width+1)/2
 	pad_right=width/2
 	
-	if left_shape>0:
+	if pad_left>0:
 		left_shape=shape
 		left_shape[axis]=pad_left
 		left=T.zeros(left_shape)
 		input=T.concatenate([left,input],axis=axis)
 
-	if right_shape>0:
+	if pad_right>0:
 		right_shape=shape
 		right_shape[axis]=pad_right
 		right=T.zeros(right_shape)
