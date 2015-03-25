@@ -24,16 +24,18 @@ def TensorPadding(input,axis,width):
 		shape.append(input.shape[i])
 	pad_left=(width+1)/2
 	pad_right=width/2
+	
+	if left_shape>0:
+		left_shape=shape
+		left_shape[axis]=pad_left
+		left=T.zeros(left_shape)
+		input=T.concatenate([left,input],axis=axis)
 
-	left_shape=shape
-	left_shape[axis]=pad_left
-	left=T.zeros(left_shape)
-	input=T.concatenate([left,input],axis=axis)
-
-	right_shape=shape
-	right_shape[axis]=pad_right
-	right=T.zeros(right_shape)
-	input=T.concatenate([input,right],axis=axis)
+	if right_shape>0:
+		right_shape=shape
+		right_shape[axis]=pad_right
+		right=T.zeros(right_shape)
+		input=T.concatenate([input,right],axis=axis)
 	return input
 
 def Padding(input,width,height):
@@ -130,7 +132,7 @@ class RecurrentConvLayer(object):
 				filter_shape=rfilter,
 				image_shape=[layer_size[0],layer_size[1],layer_size[2]+rfilter[2]-1,layer_size[3]+rfilter[3]-1]
 			)
-			state=conv_input+conv_recurrent
+			state=ReLU(conv_input+conv_recurrent)
 			
 
 		#def iteration(x_input,state):
